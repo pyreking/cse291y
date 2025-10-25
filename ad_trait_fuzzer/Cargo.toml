@@ -1,0 +1,16 @@
+[package]
+name = "ad_trait_fuzzer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ad_trait = "0.1.6"
+rand = "0.8"
+
+[dev-dependencies]
+# Required for cargo-fuzz
+libfuzzer-sys = "0.4" 
+
+# Setup the fuzz targets directory
+[build-dependencies]
+cargo-fuzz = "0.6"

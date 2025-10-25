@@ -1,0 +1,19 @@
+[package]
+name = "fuzz_targets"
+version = "0.0.1"
+publish = false
+edition = "2021"
+
+[dependencies]
+ad-trait-fuzzer = { path = ".." } 
+
+libfuzzer-sys = "0.4"
+ad_trait = "0.1.6"
+arbitrary = { version = "1.0", features = ["derive"] }
+
+[package.metadata]
+cargo-fuzz = true
+
+[[bin]]
+name = "fuzz_target_1" 
+path = "fuzz_target_1.rs" 

@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 ad-trait-fuzzer = { path = ".." } 
+tch = "0.22.0"
 
 libfuzzer-sys = "0.4"
 ad_trait = "0.1.6"

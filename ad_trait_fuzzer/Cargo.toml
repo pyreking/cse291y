@@ -1,11 +1,12 @@
 [package]
-name = "ad_trait_fuzzer"
+name = "ad-trait-fuzzer"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 ad_trait = "0.1.6"
 rand = "0.8"
+tch = "0.22.0"
 
 [dev-dependencies]
 # Required for cargo-fuzz

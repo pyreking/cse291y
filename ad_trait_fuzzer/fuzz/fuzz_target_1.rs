@@ -24,6 +24,89 @@ macro_rules! compute_expression_ad {
     };
 }
 
+trait Calculator
+{
+    fn eval_expr<T:AD>(&self, x: T, y: T) -> T;
+}
+
+#[derive(Clone)]
+struct Jacobian;
+
+impl Calculator for Jacobian
+{
+    fn eval_expr<T:AD>(&self, x: T, y: T) -> T
+    {
+	(x.sin() * y.exp()).powi(2) + x.sqrt()
+    }
+}
+
+fn check_expression_ad_results<G: Calculator + Clone>(x: f64, y: f64, calc: G) -> Vec<f64>
+{
+    #[derive(Clone)]
+    pub struct SimpleADFunction<T: AD, G: Calculator + Clone>
+    {
+	placeholder : T,
+	m_num_inputs: usize,
+	m_num_outputs: usize,
+	expression: G
+	    
+    }
+    impl<T: AD, G: Calculator + Clone> DifferentiableFunctionTrait<T> for SimpleADFunction<T, G>
+    {
+	const NAME: &'static str = "SimpleFunc";
+	fn call(&self, inputs: &[T], _freeze: bool) -> Vec<T>
+	{
+	    vec![self.expression.eval_expr(inputs[0], inputs[1])]
+	}
+
+	fn num_inputs(&self) -> usize { self.m_num_inputs }
+	fn num_outputs(&self) -> usize { self.m_num_outputs }
+    }
+    impl<T: AD, G: Calculator + Clone> SimpleADFunction<T, G> {
+	pub fn to_other_ad_type<T2: AD>(&self) -> SimpleADFunction<T2, G> {
+            SimpleADFunction { placeholder: self.placeholder.to_other_ad_type::<T2>(),
+			       m_num_inputs: self.m_num_inputs,
+			       m_num_outputs: self.m_num_outputs,
+			       expression: self.expression.clone() }
+	}
+    }
+    let func_standard = SimpleADFunction { placeholder: 0.0,
+					   m_num_inputs: 2,
+					   m_num_outputs: 1,
+					   expression: calc };
+    let inputs = vec![x, y];
+
+    // Reverse AD
+    let func_rev_derivative = func_standard.to_other_ad_type::<adr>();
+    let rev_engine = FunctionEngine::new(func_standard.clone(), func_rev_derivative, ReverseAD::new());
+    let (_f_res_rev, derivative_result_rev) = rev_engine.derivative(&inputs);
+
+    // Forward AD
+    let func_fwd_derivative = func_standard.to_other_ad_type::<adfn<1>>();
+    let fwd_engine = FunctionEngine::new(func_standard.clone(), func_fwd_derivative, ForwardAD::new());
+    let (_f_res_fwd, derivative_result_fwd) = fwd_engine.derivative(&inputs);
+
+    if derivative_result_rev.len() != derivative_result_fwd.len()
+    {
+        panic!("Derivative dimensions mismatch!");
+    }
+    let mut return_val: Vec<f64> = vec![];
+    for i in 0..derivative_result_rev.len()
+    {
+	let tolerance = 1e-6;
+	let rev_result: f64 = derivative_result_rev[i].into();
+	let fwd_result: f64 = derivative_result_fwd[i].into();
+	if (derivative_result_rev[i] - derivative_result_fwd[i]).abs() > tolerance
+	{
+	    println!("Results differ greater than tolerance at {}.", i);
+	    println!("Reverse derivative value: {}\nForward derivative value: {}", rev_result, fwd_result);
+	    println!("(x,y): ({}, {})", x, y);
+	}
+	return_val.push(rev_result);
+    }
+    return return_val
+}
+
 /// PyTorch
 macro_rules! compute_expression_pytorch {
     ($x:expr, $y:expr) => {
@@ -126,6 +209,9 @@ fuzz_target!(|data: &[u8]| {
     if x.abs() > 1e10 || y.abs() > 100.0 {
         return;
     }
+
+    let jacob = Jacobian{};
+    check_expression_ad_results(x, y, jacob);
     
     let inputs = vec![x, y];
 

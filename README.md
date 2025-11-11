@@ -2,7 +2,21 @@
 
 A differential fuzzing project built for UCSD's CSE 291Y class, focused on finding correctness bugs in Rust's automatic differentiation (AD) library [`ad_trait`](https://docs.rs/ad_trait/latest/ad_trait/).
 
-The core mechanism is a **differential fuzzing oracle** that compares the gradients computed by the forward-mode and reverse-mode implementations of the target library.
+The core mechanism is a **differential fuzzing oracle** that compares the gradients computed by the forward-mode and reverse-mode implementations of the target library. The entire fuzzing logic has been packaged into a reusable library crate (`fuzz_core`).
+
+---
+
+## Project Architecture
+
+The project is structured as a library crate (`fuzz_core`) consumed by the `libFuzzer` target. This design separates core logic (evaluation, comparison) from the I/O layer (input decoding, test generation).
+
+| Module | Responsibility |
+| :--- | :--- |
+| **`fuzz_harness`** | Defines core traits (`Calculator`, `GroundTruthCalculator`) and the master entry function (`run_ad_tests`) that executes the entire fuzzing flow. |
+| **`rpn_evaluator`** | Contains the generic logic to execute Reverse Polish Notation (RPN) expressions for both AD types and PyTorch Tensors. |
+| **`test_generator`** | Programmatically creates new, valid, random RPN expressions (`TestDefinition` structs) on the fly for dynamic fuzzing. |
+| **`oracles`** | Houses the comparison logic (`Oracle` trait). Includes checks for **Reverse vs Forward AD** consistency and **AD vs Ground Truth (PyTorch)** consistency. |
+| **`gt_calculators`** | Contains concrete implementations (e.g., `PyTorchGroundTruthCalculator`) for generating reference derivatives using external libraries. |
 
 ---
 
@@ -51,9 +65,18 @@ Build the fuzzer target (fuzz/fuzz_target_1.rs is the only target for now).
 
 ### 2. Run the Fuzzer
 
-To begin the search for bugs, simply run the target. If you have any initial example inputs (corpus), place them in fuzz/corpus/fuzz_target_1/.
+To begin the search for bugs, simply run the target. You can control the runtime behavior using environment variables:
 
-```cargo +nightly fuzz run fuzz_target_1```
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `FUZZ_MODE` | `PanicOnFirstError` | Use `continuous` to log errors but keep running; otherwise, panics on first failure. |
+| `FUZZ_TESTS` | `1` | Number of random RPN expressions to generate per fuzzer input. |
+| `FUZZ_ORACLE` | `all` | Controls which oracle checks run: `all`, `rev_fwd`, `rev_gt`, or `fwd_gt`. |
+
+**Example Run:**
+
+Run with 10 random RPN tests per input, checking only Reverse vs Forward AD consistency
+``FUZZ_TESTS=10 FUZZ_ORACLE=rev_fwd cargo +nightly fuzz run fuzz_target_1``
 
 ### 3. Reproduce a Crash
 Use the full path to a crashing artifact file to reproduce the bug (e.g., for local debugging):

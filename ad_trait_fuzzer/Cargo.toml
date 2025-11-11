@@ -1,17 +1,25 @@
 [package]
 name = "ad-trait-fuzzer"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[lib]
+name = "fuzz_core"
+path = "src/lib.rs"
 
 [dependencies]
-ad_trait = "0.1.6"
+# Replace these with the actual versions you use
+ad_trait = "0.1.6" 
+tch = "0.22.0" # PyTorch bindings
+serde = { version = "1.0", features = ["derive"] } # NEW
+serde_json = "1.0" # NEW
 rand = "0.8"
-tch = "0.22.0"
 
 [dev-dependencies]
-# Required for cargo-fuzz
-libfuzzer-sys = "0.4" 
+libfuzzer-sys = "0.4"
 
-# Setup the fuzz targets directory
-[build-dependencies]
-cargo-fuzz = "0.6"
+# Add the fuzz targets section
+[fuzz]
+targets = [
+    "fuzz_target_1",
+]

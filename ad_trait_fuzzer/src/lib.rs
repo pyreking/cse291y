@@ -1,14 +1,18 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+// src/lib.rs
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+//! Core library for the Automatic Differentiation (AD) fuzzing harness.
+//!
+//! This crate contains all the modular components for:
+//! 1. Decoding fuzzer input bytes.
+//! 2. Defining and generating test cases (RPN expressions).
+//! 3. Evaluating test cases using various AD types.
+//! 4. Calculating ground truth derivatives (via PyTorch).
+//! 5. Running and comparing results via a set of Oracles.
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub mod input_decoder;
+pub mod oracles;
+pub mod fuzz_harness;
+pub mod gt_calculators;
+pub mod test_definition;
+pub mod rpn_evaluator;
+pub mod test_generator;

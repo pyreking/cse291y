@@ -13,6 +13,7 @@ pub mod input_decoder;
 pub mod oracles;
 pub mod fuzz_harness;
 pub mod gt_calculators;
-pub mod test_definition;
-pub mod rpn_evaluator;
-pub mod test_generator;
+
+pub mod ast_expr;
+pub mod ast_evaluator;
+pub mod ast_generator;

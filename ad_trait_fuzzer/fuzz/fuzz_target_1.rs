@@ -44,16 +44,16 @@ fn get_fuzz_config() -> FuzzConfig {
 
 fuzz_target!(|data: &[u8]| {
     
-    let config = get_fuzz_config();
+    let config: FuzzConfig = get_fuzz_config();
     
-    let inputs = match TwoInputDecoder::decode(data) {
+    let inputs: Vec<f64> = match TwoInputDecoder::decode(data) {
         Ok(inputs) => inputs,
         Err(_) => return,
     };
     
     // Input Sanitization
-    let x = inputs[0];
-    let y = inputs[1];
+    let x: f64 = inputs[0];
+    let y: f64 = inputs[1];
     if !x.is_finite() || !y.is_finite() || x <= 0.0 || x.abs() > 1e10 || y.abs() > 100.0 {
         return;
     }

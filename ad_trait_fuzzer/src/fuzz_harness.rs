@@ -85,10 +85,10 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
     oracles: &FuzzingOracles,
     gt_calculators: &[T],
     mode: HarnessMode, 
-) {
+) -> Result<(), Box<dyn Error>> {
     // FIX E0034: Disambiguate the num_inputs call by specifying the trait.
     if inputs.len() != PyTorchComputable::num_inputs(&calc) || inputs.len() < 2 {
-        return;
+        return Ok(());
     }
 
     // 1. Compute AD results
@@ -118,6 +118,6 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
         forward: forward_jacobian.into_iter().map(|d| (*d).into()).collect::<Vec<f64>>(), 
     };
 
-    // 4. Run all Oracle Checks
-    oracles.check_all(&engine_results, &ground_truths, mode);
+    // 4. Run all Oracle Checks and return the result
+    oracles.check_all(&engine_results, &ground_truths, mode)
 }

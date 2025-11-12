@@ -5,7 +5,7 @@
 use tch::Tensor;
 use crate::ast_expr::Expr;
 use crate::fuzz_harness::PyTorchComputable;
-use super::{NumericBackend, evaluate};
+use super::{MainBackend, evaluate};
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -44,7 +44,7 @@ impl Clone for PyTorchTensor {
     }
 }
 
-impl NumericBackend for PyTorchTensor {
+impl MainBackend for PyTorchTensor {
     fn from_f64(val: f64) -> Self {
         PyTorchTensor(Tensor::from(val).to_kind(tch::Kind::Double))
     }
@@ -68,6 +68,7 @@ pub struct PyTorchEvaluator<Tag: Clone> {
     pub num_outputs: usize,
 }
 
+// specific eval for PyTorch
 impl<Tag: Clone> PyTorchComputable for PyTorchEvaluator<Tag> {
     fn compute_pytorch(&self, inputs: &[Tensor]) -> Result<Vec<Tensor>, Box<dyn Error>> {
         if inputs.len() < self.num_inputs {

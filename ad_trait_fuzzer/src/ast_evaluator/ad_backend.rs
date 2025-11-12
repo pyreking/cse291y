@@ -5,7 +5,7 @@
 use ad_trait::AD;
 use crate::ast_expr::Expr;
 use crate::fuzz_harness::Calculator;
-use super::{NumericBackend, evaluate};
+use super::{MainBackend, evaluate};
 use std::collections::HashMap;
 
 macro_rules! impl_forwarding_ops {
@@ -29,7 +29,7 @@ macro_rules! impl_forwarding_ops {
 }
 
 
-impl<T: AD> NumericBackend for T {
+impl<T: AD> MainBackend for T {
     fn from_f64(val: f64) -> Self {
         T::from_f64(val).unwrap_or_else(|| T::zero())
     }
@@ -48,6 +48,7 @@ pub struct AdEvaluator<Tag: Clone> {
     pub num_outputs: usize,
 }
 
+// specific eval for AD
 impl<Tag: Clone> Calculator for AdEvaluator<Tag> {
     fn eval_expr<T: AD>(&self, x: T, y: T) -> T {
         let mut env = HashMap::new();

@@ -12,12 +12,11 @@ pub mod unified;
 
 pub use ad_backend::AdEvaluator;
 pub use pytorch_backend::PyTorchEvaluator;
-pub use unified::UnifiedEvaluator;
 
 /// env for var bindings during eval
 pub type Env<T> = HashMap<String, T>;
 
-pub trait NumericBackend: Sized + Clone {
+pub trait MainBackend: Sized + Clone {
     fn from_f64(val: f64) -> Self;
     fn zero() -> Self;
     fn one() -> Self;
@@ -39,8 +38,8 @@ pub trait NumericBackend: Sized + Clone {
     fn pow(self, other: Self) -> Self;
 }
 
-/// Generic eval for NumericBackend
-pub fn evaluate<T: NumericBackend, Tag>(
+/// Generic eval for MainBackend
+pub fn evaluate<T: MainBackend, Tag>(
     expr: &Expr<Tag>,
     env: &Env<T>,
 ) -> Result<T, String> {

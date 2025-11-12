@@ -10,15 +10,15 @@ use tch::Tensor;
 use std::error::Error;
 
 #[derive(Clone)]
-pub struct UnifiedEvaluator<Tag: Clone> {
+pub struct AllEvaluators<Tag: Clone> {
     ad_eval: AdEvaluator<Tag>,
     pytorch_eval: PyTorchEvaluator<Tag>,
 }
 
-impl<Tag: Clone + std::fmt::Debug> UnifiedEvaluator<Tag> {
+impl<Tag: Clone + std::fmt::Debug> AllEvaluators<Tag> {
     pub fn new(expr: Expr<Tag>, num_inputs: usize, num_outputs: usize) -> Self {
 
-        UnifiedEvaluator {
+        AllEvaluators {
             ad_eval: AdEvaluator {
                 expr: expr.clone(),
                 num_inputs,
@@ -37,13 +37,13 @@ impl<Tag: Clone + std::fmt::Debug> UnifiedEvaluator<Tag> {
     }
 }
 
-impl<Tag: Clone> Calculator for UnifiedEvaluator<Tag> {
+impl<Tag: Clone> Calculator for AllEvaluators<Tag> {
     fn eval_expr<T: AD>(&self, x: T, y: T) -> T {
         self.ad_eval.eval_expr(x, y)
     }
 }
 
-impl<Tag: Clone> PyTorchComputable for UnifiedEvaluator<Tag> {
+impl<Tag: Clone> PyTorchComputable for AllEvaluators<Tag> {
     fn compute_pytorch(&self, inputs: &[Tensor]) -> Result<Vec<Tensor>, Box<dyn Error>> {
         self.pytorch_eval.compute_pytorch(inputs)
     }

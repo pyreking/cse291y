@@ -8,7 +8,7 @@ use fuzz_core::input_decoder::{FuzzInputDecoder, TwoInputDecoder};
 use fuzz_core::fuzz_harness::{run_ad_tests, HarnessMode, FuzzConfig}; 
 use fuzz_core::oracles::FuzzingOracles; 
 use fuzz_core::gt_calculators::PyTorchGroundTruthCalculator; 
-use fuzz_core::ast_evaluator::UnifiedEvaluator;
+use fuzz_core::ast_evaluator::unified::AllEvaluators;
 use fuzz_core::ast_generator::{generate_from_bytes, AstGenConfig};
 
 const NUM_GENERATED_TESTS: usize = 1; 
@@ -106,7 +106,7 @@ fuzz_target!(|data: &[u8]| {
             Err(_) => continue,
         };
         
-        let evaluator = UnifiedEvaluator::new(expr, 2, 1);
+        let evaluator = AllEvaluators::new(expr, 2, 1);
         evaluators.push(evaluator);
     }
     

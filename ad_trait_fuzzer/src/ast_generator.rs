@@ -74,6 +74,7 @@ fn generate_terminal(
     u: &mut Unstructured,
     config: &AstGenConfig,
 ) -> Result<Expr<()>, ArbitraryError> {
+    println!("Max variable as read from generate terminal: {}", config.max_variables);
     if u.ratio(2, 5)? {
         // Gen a var
         let var_idx = u.int_in_range(0..=config.max_variables.saturating_sub(1))?;

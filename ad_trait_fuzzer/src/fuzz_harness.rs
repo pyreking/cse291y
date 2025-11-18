@@ -88,6 +88,7 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
 ) -> Result<(), Box<dyn Error>> {
     // FIX E0034: Disambiguate the num_inputs call by specifying the trait.
     if inputs.len() != PyTorchComputable::num_inputs(&calc) || inputs.len() < 2 {
+        println!("Exiting due to input error!!");
         return Ok(());
     }
 

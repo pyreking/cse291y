@@ -44,13 +44,13 @@ pub fn evaluate<T: MainBackend, Tag>(
     env: &Env<T>,
 ) -> Result<T, String> {
     use crate::ast_expr::{Op1, Op2};
-    
     match expr {
         Expr::Number(_, val) => Ok(T::from_f64(*val)),
         
         Expr::Boolean(_, _) => Err("Boolean not supported in numeric expressions".to_string()),
         
         Expr::Id(_, name) => {
+            println!("{}", name);
             env.get(name)
                 .cloned()
                 .ok_or_else(|| format!("Variable '{}' not found", name))

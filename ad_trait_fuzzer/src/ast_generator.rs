@@ -74,15 +74,14 @@ fn generate_terminal(
     u: &mut Unstructured,
     config: &AstGenConfig,
 ) -> Result<Expr<()>, ArbitraryError> {
-    println!("Max variable as read from generate terminal: {}", config.max_variables);
     if u.ratio(2, 5)? {
         // Gen a var
+        if u.is_empty()
+        {       
+            return Err(ArbitraryError::NotEnoughData);
+        }
         let var_idx = u.int_in_range(0..=config.max_variables.saturating_sub(1))?;
-        let name = match var_idx {
-            0 => "x".to_string(),
-            1 => "y".to_string(),
-            _ => format!("v{}", var_idx),
-        };
+        let name = format!("x_{}", var_idx);
         Ok(Expr::Id((), name))
     } else {
         // Gen a number

@@ -64,4 +64,8 @@ impl<Tag: Clone> Calculator for AdEvaluator<Tag> {
             Err(_) => T::zero()
         }
     }
+    fn num_inputs(&self) -> usize
+    {
+        self.num_inputs
+    }
 }

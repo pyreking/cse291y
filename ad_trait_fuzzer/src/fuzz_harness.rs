@@ -17,7 +17,7 @@ use crate::oracles::{FuzzingOracles, EngineResults, GroundTruth};
 pub trait Calculator: Clone
 {
     fn eval_expr<T: AD + PartialEq>(&self, _: &[T]) -> T;
-    fn num_inputs(&self) -> usize { 3 } 
+    fn num_inputs(&self) -> usize; 
     fn num_outputs(&self) -> usize { 1 }
 }
 

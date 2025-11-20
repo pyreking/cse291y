@@ -38,8 +38,8 @@ impl<Tag: Clone + std::fmt::Debug> AllEvaluators<Tag> {
 }
 
 impl<Tag: Clone> Calculator for AllEvaluators<Tag> {
-    fn eval_expr<T: AD>(&self, x: T, y: T) -> T {
-        self.ad_eval.eval_expr(x, y)
+    fn eval_expr<T: AD>(&self, inputs: &[T]) -> T {
+        self.ad_eval.eval_expr(inputs)
     }
 }
 

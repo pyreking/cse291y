@@ -13,6 +13,15 @@ use fuzz_core::ast_generator::{generate_from_bytes, AstGenConfig};
 
 const NUM_GENERATED_TESTS: usize = 1; 
 
+// Print utility function:
+fn print_vec(vec: &Vec<f64>)
+{
+    for (i, e) in vec.iter().enumerate()
+    {
+        println!("x_{}: {}", i, e);
+    }
+}
+
 // --- Configuration Reader (Reads Environment Variables) ---
 
 fn get_fuzz_config() -> FuzzConfig {
@@ -100,7 +109,7 @@ fuzz_target!(|data: &[u8]| {
         return;
     }
     
-    let ast_data = &data[16..];
+    let ast_data = &data[min_data_size..];
     
     // Generate AST using arbitrary
     let mut evaluators = Vec::new();
@@ -118,7 +127,7 @@ fuzz_target!(|data: &[u8]| {
             Err(_) => continue,
         };
         
-        let evaluator = AllEvaluators::new(expr, 2, 1);
+        let evaluator = AllEvaluators::new(expr, num_variables, 1);
         evaluators.push(evaluator);
     }
     
@@ -132,12 +141,14 @@ fuzz_target!(|data: &[u8]| {
         PyTorchGroundTruthCalculator,
     ];
     
+    println!("Inputs length: {}", inputs.len());
     for (idx, evaluator) in evaluators.iter().enumerate() {
         if let Err(e) = run_ad_tests(inputs.clone(), evaluator.clone(), &oracles, &gt_calculators, config.mode) {
             eprintln!("\n=== CRASH DETECTED ===");
             eprintln!("Expression that caused the crash:");
             eprintln!("{:#?}", evaluator.get_expr());
-            eprintln!("Inputs: x={}, y={}", inputs[0], inputs[1]);
+            eprintln!("Inputs:");
+            print_vec(&inputs);
             eprintln!("Error: {}", e);
             eprintln!("======================\n");
             

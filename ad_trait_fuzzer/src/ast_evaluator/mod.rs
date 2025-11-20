@@ -50,7 +50,6 @@ pub fn evaluate<T: MainBackend, Tag>(
         Expr::Boolean(_, _) => Err("Boolean not supported in numeric expressions".to_string()),
         
         Expr::Id(_, name) => {
-            println!("{}", name);
             env.get(name)
                 .cloned()
                 .ok_or_else(|| format!("Variable '{}' not found", name))

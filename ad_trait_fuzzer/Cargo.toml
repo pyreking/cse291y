@@ -9,7 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # Replace these with the actual versions you use
-ad_trait = "0.1.6" 
+ad_trait = { path = "./ad_trait" }
 tch = "0.22.0" # PyTorch bindings
 serde = { version = "1.0", features = ["derive"] } # NEW
 serde_json = "1.0" # NEW

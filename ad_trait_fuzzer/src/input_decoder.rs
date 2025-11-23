@@ -56,7 +56,6 @@ impl FuzzInputDecoder for GeneralInputDecoder
             let bytes: [u8; 8] = data[i..(8 + i)].try_into().map_err(|_| "Failed to slice bytes")?;
             *el = f64::from_le_bytes(bytes);
         } 
-        println!("First vector value after decode: {}", ret_val[0]);
         return Ok(ret_val);
     }
 }

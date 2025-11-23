@@ -53,7 +53,6 @@ pub struct AdEvaluator<Tag: Clone> {
 impl<Tag: Clone> Calculator for AdEvaluator<Tag> {
     fn eval_expr<T: AD>(&self, inputs: &[T]) -> T {
         let mut env = HashMap::new();
-        println!("Input length: {}", inputs.len());
         for (i, e) in inputs.iter().enumerate()
         {
             env.insert(format(format_args!("x_{}", i)), *e);

@@ -141,7 +141,6 @@ fuzz_target!(|data: &[u8]| {
         PyTorchGroundTruthCalculator,
     ];
     
-    println!("Inputs length: {}", inputs.len());
     for (idx, evaluator) in evaluators.iter().enumerate() {
         if let Err(e) = run_ad_tests(inputs.clone(), evaluator.clone(), &oracles, &gt_calculators, config.mode) {
             eprintln!("\n=== CRASH DETECTED ===");

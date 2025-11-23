@@ -4,7 +4,7 @@
 use libfuzzer_sys::fuzz_target;
 use std::env;
 
-use fuzz_core::input_decoder::{FuzzInputDecoder, TwoInputDecoder}; 
+use fuzz_core::input_decoder::{FuzzInputDecoder, TwoInputDecoder, GeneralInputDecoder};
 use fuzz_core::fuzz_harness::{run_ad_tests, HarnessMode, FuzzConfig}; 
 use fuzz_core::oracles::FuzzingOracles; 
 use fuzz_core::gt_calculators::PyTorchGroundTruthCalculator; 
@@ -12,6 +12,15 @@ use fuzz_core::ast_evaluator::unified::AllEvaluators;
 use fuzz_core::ast_generator::{generate_from_bytes, AstGenConfig};
 
 const NUM_GENERATED_TESTS: usize = 1; 
+
+// Print utility function:
+fn print_vec(vec: &Vec<f64>)
+{
+    for (i, e) in vec.iter().enumerate()
+    {
+        println!("x_{}: {}", i, e);
+    }
+}
 
 // --- Configuration Reader (Reads Environment Variables) ---
 
@@ -58,9 +67,14 @@ fn get_ast_config() -> AstGenConfig {
         .map(|s| s.eq_ignore_ascii_case("true"))
         .unwrap_or(false);  // Disable by def
 
+    let max_variables = env::var("AST_MAX_VARIABLES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(2);
+
     AstGenConfig {
         max_depth,
-        max_variables: 2,
+        max_variables,
         allow_division,
         allow_power,
         allow_log,
@@ -70,13 +84,21 @@ fn get_ast_config() -> AstGenConfig {
 // --- Fuzz Target Implementation ---
 
 fuzz_target!(|data: &[u8]| {
-    if data.len() < 16 {
-        return;
-    }
-    
     let config: FuzzConfig = get_fuzz_config();
     
-    let inputs: Vec<f64> = match TwoInputDecoder::decode(&data[0..16]) {
+    let ast_config = get_ast_config();
+    let num_variables = ast_config.max_variables;
+
+    let input_decoder: GeneralInputDecoder = GeneralInputDecoder{ input_length: num_variables };
+
+    let min_data_size = num_variables * 8;
+
+    if data.len() < min_data_size
+    {
+        return;
+    }
+
+    let inputs: Vec<f64> = match input_decoder.decode(&data[0..min_data_size]) {
         Ok(inputs) => inputs,
         Err(_) => return,
     };
@@ -87,8 +109,7 @@ fuzz_target!(|data: &[u8]| {
         return;
     }
     
-    let ast_data = &data[16..];
-    let ast_config = get_ast_config();
+    let ast_data = &data[min_data_size..];
     
     // Generate AST using arbitrary
     let mut evaluators = Vec::new();
@@ -106,7 +127,7 @@ fuzz_target!(|data: &[u8]| {
             Err(_) => continue,
         };
         
-        let evaluator = AllEvaluators::new(expr, 2, 1);
+        let evaluator = AllEvaluators::new(expr, num_variables, 1);
         evaluators.push(evaluator);
     }
     
@@ -125,7 +146,8 @@ fuzz_target!(|data: &[u8]| {
             eprintln!("\n=== CRASH DETECTED ===");
             eprintln!("Expression that caused the crash:");
             eprintln!("{:#?}", evaluator.get_expr());
-            eprintln!("Inputs: x={}, y={}", inputs[0], inputs[1]);
+            eprintln!("Inputs:");
+            print_vec(&inputs);
             eprintln!("Error: {}", e);
             eprintln!("======================\n");
             

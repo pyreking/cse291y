@@ -7,6 +7,7 @@ use crate::ast_expr::Expr;
 use crate::fuzz_harness::Calculator;
 use super::{MainBackend, evaluate};
 use std::collections::HashMap;
+use std::fmt::format;
 
 macro_rules! impl_forwarding_ops {
     () => {
@@ -50,14 +51,20 @@ pub struct AdEvaluator<Tag: Clone> {
 
 // specific eval for AD
 impl<Tag: Clone> Calculator for AdEvaluator<Tag> {
-    fn eval_expr<T: AD>(&self, x: T, y: T) -> T {
+    fn eval_expr<T: AD>(&self, inputs: &[T]) -> T {
         let mut env = HashMap::new();
-        env.insert("x".to_string(), x);
-        env.insert("y".to_string(), y);
+        for (i, e) in inputs.iter().enumerate()
+        {
+            env.insert(format(format_args!("x_{}", i)), *e);
+        }
         
         match evaluate(&self.expr, &env) {
             Ok(result) => result,
-            Err(_) => T::zero(),
+            Err(_) => T::zero()
         }
+    }
+    fn num_inputs(&self) -> usize
+    {
+        self.num_inputs
     }
 }

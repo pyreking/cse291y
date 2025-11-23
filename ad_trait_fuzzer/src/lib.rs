@@ -1,5 +1,6 @@
 // src/lib.rs
 
+#![feature(slice_pattern)]
 //! Core library for the Automatic Differentiation (AD) fuzzing harness.
 //!
 //! This crate contains all the modular components for:

@@ -13,6 +13,7 @@ use std::error::Error;
 pub struct AllEvaluators<Tag: Clone> {
     ad_eval: AdEvaluator<Tag>,
     pytorch_eval: PyTorchEvaluator<Tag>,
+    _num_inputs: usize
 }
 
 impl<Tag: Clone + std::fmt::Debug> AllEvaluators<Tag> {
@@ -29,6 +30,7 @@ impl<Tag: Clone + std::fmt::Debug> AllEvaluators<Tag> {
                 num_inputs,
                 num_outputs,
             },
+            _num_inputs: num_inputs
         }
     }
     
@@ -38,8 +40,12 @@ impl<Tag: Clone + std::fmt::Debug> AllEvaluators<Tag> {
 }
 
 impl<Tag: Clone> Calculator for AllEvaluators<Tag> {
-    fn eval_expr<T: AD>(&self, x: T, y: T) -> T {
-        self.ad_eval.eval_expr(x, y)
+    fn eval_expr<T: AD>(&self, inputs: &[T]) -> T {
+        self.ad_eval.eval_expr(inputs)
+    }
+    fn num_inputs(&self) -> usize
+    {
+        self._num_inputs
     }
 }
 

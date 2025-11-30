@@ -76,9 +76,8 @@ impl<Tag: Clone> PyTorchComputable for PyTorchEvaluator<Tag> {
         }
         
         let mut env = HashMap::new();
-        env.insert("x".to_string(), PyTorchTensor(inputs[0].shallow_clone()));
-        if inputs.len() > 1 {
-            env.insert("y".to_string(), PyTorchTensor(inputs[1].shallow_clone()));
+        for (i, input) in inputs.iter().enumerate() {
+            env.insert(format!("x_{}", i), PyTorchTensor(input.shallow_clone()));
         }
         
         match evaluate(&self.expr, &env) {

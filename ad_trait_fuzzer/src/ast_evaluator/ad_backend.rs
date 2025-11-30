@@ -60,7 +60,7 @@ impl<Tag: Clone> Calculator for AdEvaluator<Tag> {
         
         match evaluate(&self.expr, &env) {
             Ok(result) => result,
-            Err(_) => T::zero()
+            Err(e) => {panic!("Error during AD evaluation: {}", e)}
         }
     }
     fn num_inputs(&self) -> usize

@@ -9,9 +9,11 @@ use crate::ast_expr::Expr;
 pub mod ad_backend;
 pub mod pytorch_backend;
 pub mod unified;
+pub mod print_backend;
 
 pub use ad_backend::AdEvaluator;
 pub use pytorch_backend::PyTorchEvaluator;
+pub use print_backend::{SExprPrinter, SSAPrinter, InfixPrinter};
 
 /// env for var bindings during eval
 pub type Env<T> = HashMap<String, T>;
@@ -47,12 +49,12 @@ pub fn evaluate<T: MainBackend, Tag>(
     match expr {
         Expr::Number(_, val) => Ok(T::from_f64(*val)),
         
-        Expr::Boolean(_, _) => Err("Boolean not supported in numeric expressions".to_string()),
+        Expr::Boolean(_, _) => Err("Bool not supported in numeric expressions (yet)".to_string()),
         
         Expr::Id(_, name) => {
             env.get(name)
                 .cloned()
-                .ok_or_else(|| format!("Variable '{}' not found", name))
+                .ok_or_else(|| format!("Var '{}' not found", name))
         }
         
         Expr::UnOp(_, op, sub_expr) => {

@@ -9,6 +9,7 @@ use fuzz_core::fuzz_harness::{run_ad_tests, HarnessMode, FuzzConfig};
 use fuzz_core::oracles::FuzzingOracles; 
 use fuzz_core::gt_calculators::PyTorchGroundTruthCalculator; 
 use fuzz_core::ast_evaluator::unified::AllEvaluators;
+use fuzz_core::ast_evaluator::{SExprPrinter, SSAPrinter, InfixPrinter};
 use fuzz_core::ast_generator::{generate_from_bytes, AstGenConfig};
 
 const NUM_GENERATED_TESTS: usize = 1; 
@@ -143,10 +144,19 @@ fuzz_target!(|data: &[u8]| {
     
     for (idx, evaluator) in evaluators.iter().enumerate() {
         if let Err(e) = run_ad_tests(inputs.clone(), evaluator.clone(), &oracles, &gt_calculators, config.mode) {
+            let expr = evaluator.get_expr();
+            let num_vars = evaluator.num_inputs();
             eprintln!("\n=== CRASH DETECTED ===");
             eprintln!("Expression that caused the crash:");
-            eprintln!("{:#?}", evaluator.get_expr());
-            eprintln!("Inputs:");
+            eprintln!("\nInfix notation:");
+            eprintln!("{}", InfixPrinter::print(expr, num_vars));
+            eprintln!("\nS-expression format:");
+            eprintln!("{}", SExprPrinter::print(expr, num_vars));
+            eprintln!("\nSSA format:");
+            eprintln!("{}", SSAPrinter::print(expr));
+            eprintln!("\nDebug format:");
+            eprintln!("{:#?}", expr);
+            eprintln!("\nInputs:");
             print_vec(&inputs);
             eprintln!("Error: {}", e);
             eprintln!("======================\n");

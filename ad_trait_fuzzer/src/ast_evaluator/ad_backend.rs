@@ -16,7 +16,7 @@ macro_rules! impl_forwarding_ops {
         fn cos(self) -> Self { self.cos() }
         fn tan(self) -> Self { self.tan() }
         fn exp(self) -> Self { self.exp() }
-        fn log(self) -> Self { self.ln() }  // Note: AD trait uses ln(), not log()
+        fn log(self) -> Self { self.ln() }  // AD trait uses ln(), not log()
         fn sqrt(self) -> Self { self.sqrt() }
         fn abs(self) -> Self { self.abs() }
         
@@ -32,7 +32,7 @@ macro_rules! impl_forwarding_ops {
 
 impl<T: AD> MainBackend for T {
     fn from_f64(val: f64) -> Self {
-        T::from_f64(val).unwrap_or_else(|| T::zero())
+        T::constant(val)
     }
     
     fn zero() -> Self { T::zero() }
@@ -55,16 +55,20 @@ impl<Tag: Clone> Calculator for AdEvaluator<Tag> {
         let mut env = HashMap::new();
         for (i, e) in inputs.iter().enumerate()
         {
-            env.insert(format(format_args!("x_{}", i)), *e);
+            env.insert(format(format_args!("x_{}", i)), e.clone());
         }
         
         match evaluate(&self.expr, &env) {
             Ok(result) => result,
-            Err(e) => {panic!("Error during AD evaluation: {}", e)}
+            Err(e) => panic!("Error during AD evaluation: {}", e)
         }
     }
-    fn num_inputs(&self) -> usize
-    {
+    
+    fn num_inputs(&self) -> usize {
         self.num_inputs
+    }
+    
+    fn num_outputs(&self) -> usize {
+        self.num_outputs
     }
 }

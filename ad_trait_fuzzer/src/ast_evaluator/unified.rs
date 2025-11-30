@@ -49,9 +49,13 @@ impl<Tag: Clone> Calculator for AllEvaluators<Tag> {
     fn eval_expr<T: AD>(&self, inputs: &[T]) -> T {
         self.ad_eval.eval_expr(inputs)
     }
-    fn num_inputs(&self) -> usize
-    {
+    
+    fn num_inputs(&self) -> usize {
         self.num_inputs
+    }
+    
+    fn num_outputs(&self) -> usize {
+        self.ad_eval.num_outputs
     }
 }
 

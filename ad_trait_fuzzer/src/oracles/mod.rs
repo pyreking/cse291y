@@ -21,8 +21,7 @@ pub struct GroundTruth {
 /// A struct to hold ONLY the AD engine results and contextual input data.
 #[derive(Debug, Clone)]
 pub struct EngineResults {
-    pub x: f64,
-    pub y: f64,
+    pub inputs: Vec<f64>,
     pub reverse: Vec<f64>,
     pub forward: Vec<f64>,
 }
@@ -67,7 +66,7 @@ impl FuzzingOracles {
             // 1. Run Internal AD vs AD check (rev_fwd)
             if self.check_mode.eq_ignore_ascii_case("all") || self.check_mode.eq_ignore_ascii_case("rev_fwd") {
                 if let Err(e) = self.reverse_vs_forward.check(engine, None, i) {
-                    return Err(format!("Oracle check failed for input ({}, {}):\n{}", engine.x, engine.y, e).into());
+                    return Err(format!("Oracle check failed for inputs {:?}:\n{}", engine.inputs, e).into());
                 }
             }
 
@@ -76,14 +75,14 @@ impl FuzzingOracles {
                 // Run Reverse AD vs GT
                 if self.check_mode.eq_ignore_ascii_case("all") || self.check_mode.eq_ignore_ascii_case("rev_gt") {
                     if let Err(e) = self.reverse_vs_gt.check(engine, Some(gt), i) {
-                        return Err(format!("Oracle check failed (Rev vs {}):\n{}", gt.name, e).into());
+                        return Err(format!("Oracle check failed for inputs {:?} (Rev vs {}):\n{}", engine.inputs, gt.name, e).into());
                     }
                 }
                 
                 // Run Forward AD vs GT
                 if self.check_mode.eq_ignore_ascii_case("all") || self.check_mode.eq_ignore_ascii_case("fwd_gt") {
                     if let Err(e) = self.forward_vs_gt.check(engine, Some(gt), i) {
-                        return Err(format!("Oracle check failed (Fwd vs {}):\n{}", gt.name, e).into());
+                        return Err(format!("Oracle check failed for inputs {:?} (Fwd vs {}):\n{}", engine.inputs, gt.name, e).into());
                     }
                 }
             }

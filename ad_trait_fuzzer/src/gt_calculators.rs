@@ -54,8 +54,7 @@ impl GroundTruthCalculator for PyTorchGroundTruthCalculator {
                 match f64::try_from(grad_tensor.double_value(&[])) {
                     Ok(val) => val,
                     Err(_) => {
-                        //eprintln!("Warning: PyTorch gradient conversion failed unexpectedly. Assuming 0.0");
-                        0.0
+                        panic!("Warning: PyTorch gradient conversion failed unexpectedly. Assuming 0.0");
                     }
                 }
             } else {

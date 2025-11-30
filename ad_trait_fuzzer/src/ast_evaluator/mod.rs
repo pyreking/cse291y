@@ -44,7 +44,6 @@ pub fn evaluate<T: MainBackend, Tag>(
     env: &Env<T>,
 ) -> Result<T, String> {
     use crate::ast_expr::{Op1, Op2};
-    
     match expr {
         Expr::Number(_, val) => Ok(T::from_f64(*val)),
         

@@ -6,6 +6,7 @@ use ad_trait::differentiable_function::{ForwardAD, ReverseAD};
 use ad_trait::differentiable_function::DifferentiableFunctionTrait;
 use ad_trait::forward_ad::adfn::adfn;
 use ad_trait::reverse_ad::adr::adr;
+use core::slice::SlicePattern;
 use tch::Tensor; 
 use std::error::Error;
 
@@ -15,8 +16,8 @@ use crate::oracles::{FuzzingOracles, EngineResults, GroundTruth};
 
 pub trait Calculator: Clone
 {
-    fn eval_expr<T: AD + PartialEq>(&self, x: T, y: T) -> T;
-    fn num_inputs(&self) -> usize { 2 } 
+    fn eval_expr<T: AD + PartialEq>(&self, _: &[T]) -> T;
+    fn num_inputs(&self) -> usize; 
     fn num_outputs(&self) -> usize { 1 }
 }
 
@@ -63,7 +64,7 @@ impl<T: AD, G: Calculator> DifferentiableFunctionTrait<T> for SimpleADFunction<T
     fn call(&self, inputs: &[T], _freeze: bool) -> Vec<T>
     {
         if inputs.len() < 2 { return vec![T::zero()]; }
-        vec![self.expression.eval_expr(inputs[0], inputs[1])]
+        vec![self.expression.eval_expr(inputs.as_slice())]
     }
 
     fn num_inputs(&self) -> usize { self.expression.num_inputs() }
@@ -85,10 +86,11 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
     oracles: &FuzzingOracles,
     gt_calculators: &[T],
     mode: HarnessMode, 
-) {
+) -> Result<(), Box<dyn Error>> {
     // FIX E0034: Disambiguate the num_inputs call by specifying the trait.
     if inputs.len() != PyTorchComputable::num_inputs(&calc) || inputs.len() < 2 {
-        return;
+        println!("Exiting due to input error!!");
+        return Ok(());
     }
 
     // 1. Compute AD results
@@ -118,6 +120,6 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
         forward: forward_jacobian.into_iter().map(|d| (*d).into()).collect::<Vec<f64>>(), 
     };
 
-    // 4. Run all Oracle Checks
-    oracles.check_all(&engine_results, &ground_truths, mode);
+    // 4. Run all Oracle Checks and return the result
+    oracles.check_all(&engine_results, &ground_truths, mode)
 }

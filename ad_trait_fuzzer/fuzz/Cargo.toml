@@ -21,3 +21,11 @@ cargo-fuzz = true
 [[bin]]
 name = "fuzz_target_1" 
 path = "fuzz_target_1.rs" 
+
+[[bin]]
+name = "fuzz_target_ast_example"
+path = "fuzz_target_ast_example.rs"
+
+[[bin]]
+name = "fuzz_target_ast"
+path = "fuzz_target_ast.rs"

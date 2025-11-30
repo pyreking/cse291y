@@ -57,16 +57,17 @@ impl FuzzingOracles {
     }
     
     /// Executes all contained oracle checks against the computed results, respecting the harness mode.
-    pub fn check_all(&self, engine: &EngineResults, ground_truths: &[GroundTruth], mode: HarnessMode) {
+    /// Returns an error if any oracle check fails.
+    pub fn check_all(&self, engine: &EngineResults, ground_truths: &[GroundTruth], mode: HarnessMode) -> Result<(), Box<dyn Error>> {
         if engine.reverse.len() != engine.forward.len() {
-            panic!("Engine error: AD derivative dimension mismatch!");
+            return Err("Engine error: AD derivative dimension mismatch!".into());
         }
 
-            for i in 0..engine.reverse.len() {
+        for i in 0..engine.reverse.len() {
             // 1. Run Internal AD vs AD check (rev_fwd)
             if self.check_mode.eq_ignore_ascii_case("all") || self.check_mode.eq_ignore_ascii_case("rev_fwd") {
                 if let Err(e) = self.reverse_vs_forward.check(engine, None, i) {
-                    panic!("Oracle check failed for input ({}, {}):\\n{}", engine.x, engine.y, e);
+                    return Err(format!("Oracle check failed for input ({}, {}):\n{}", engine.x, engine.y, e).into());
                 }
             }
 
@@ -75,17 +76,19 @@ impl FuzzingOracles {
                 // Run Reverse AD vs GT
                 if self.check_mode.eq_ignore_ascii_case("all") || self.check_mode.eq_ignore_ascii_case("rev_gt") {
                     if let Err(e) = self.reverse_vs_gt.check(engine, Some(gt), i) {
-                        panic!("Oracle check failed (Rev vs {}):\\n{}", gt.name, e);
+                        return Err(format!("Oracle check failed (Rev vs {}):\n{}", gt.name, e).into());
                     }
                 }
                 
                 // Run Forward AD vs GT
                 if self.check_mode.eq_ignore_ascii_case("all") || self.check_mode.eq_ignore_ascii_case("fwd_gt") {
                     if let Err(e) = self.forward_vs_gt.check(engine, Some(gt), i) {
-                        panic!("Oracle check failed (Fwd vs {}):\\n{}", gt.name, e);
+                        return Err(format!("Oracle check failed (Fwd vs {}):\n{}", gt.name, e).into());
                     }
                 }
             }
         }
+        
+        Ok(())
     }
 }

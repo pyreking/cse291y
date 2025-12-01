@@ -1,4 +1,5 @@
 // examples/build_custom_ast.rs
+// cargo +nightly run --example custom_asts
 
 use fuzz_core::ast_expr::{SimpleExpr, Expr};
 use fuzz_core::ast_evaluator::unified::AdPyUnified;

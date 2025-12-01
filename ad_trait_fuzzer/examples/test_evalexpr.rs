@@ -1,11 +1,9 @@
 // examples/test_evalexpr.rs
-//
-// Test evalexpr-jit for JIT-compiled evaluation and derivatives
-// Run with: cargo +nightly run --example test_evalexpr
+
 
 use fuzz_core::ast_expr::SimpleExpr;
 use fuzz_core::ast_evaluator::EvalexprEvaluator;
-use fuzz_core::ast_evaluator::unified::AllEvaluators;
+use fuzz_core::ast_evaluator::unified::AdPyUnified;
 use fuzz_core::fuzz_harness::run_custom_test;
 use fuzz_core::gt_calculators::PyTorchGroundTruthCalculator;
 
@@ -37,7 +35,7 @@ fn test_evalexpr_vs_ad_trait<const N: usize>(name: &str, expr: SimpleExpr, input
     
     // Test with AD trait for comparison
     println!("\nUsing AD trait:");
-    let evaluator = AllEvaluators::new(expr, N, 1);
+    let evaluator = AdPyUnified::new(expr, N, 1);
     let gt_calculators = [PyTorchGroundTruthCalculator];
     let _ = run_custom_test(&inputs, evaluator, &gt_calculators);
 }

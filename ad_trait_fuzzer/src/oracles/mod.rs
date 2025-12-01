@@ -5,9 +5,11 @@ use crate::fuzz_harness::HarnessMode;
 
 mod reverse_vs_forward;
 mod ad_vs_pytorch;
+mod evalexpr_vs_pytorch;
 
 pub use reverse_vs_forward::ReverseVsForwardCheck;
-pub use ad_vs_pytorch::{ADVsGroundTruthCheck, ADType}; 
+pub use ad_vs_pytorch::{ADVsGroundTruthCheck, ADType};
+pub use evalexpr_vs_pytorch::EvalexprVsPyTorchCheck; 
 
 // --- Structs for Data Transport ---
 

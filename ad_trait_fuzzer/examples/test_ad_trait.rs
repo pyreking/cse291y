@@ -1,7 +1,5 @@
 // examples/test_ad_trait.rs
-//
-// Direct test of ad_trait to verify it's working correctly
-// Run with: cargo +nightly run --example test_ad_trait
+
 
 use ad_trait::AD;
 use ad_trait::reverse_ad::adr::adr;
@@ -9,7 +7,6 @@ use ad_trait::forward_ad::adfn::adfn;
 use ad_trait::function_engine::FunctionEngine;
 use ad_trait::differentiable_function::{ForwardAD, ReverseAD, DifferentiableFunctionTrait};
 
-// Define a simple function: f(x, y) = -0.1 * x
 #[derive(Clone)]
 struct SimpleFunc<T: AD> {
     phantom: std::marker::PhantomData<T>,

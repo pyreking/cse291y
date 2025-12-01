@@ -2,9 +2,11 @@
 
 use super::print_backend::InfixPrinter;
 use crate::ast_expr::Expr;
+use crate::fuzz_harness::PyTorchComputable;
 use evalexpr_jit::{Equation, backends::vector::Vector};
 use std::error::Error;
 use std::sync::Arc;
+use tch::Tensor;
 
 #[derive(Clone)]
 pub struct EvalexprEvaluator<Tag: Clone> {
@@ -25,7 +27,7 @@ impl<Tag: Clone> EvalexprEvaluator<Tag> {
         })
     }
     
-    /// Evaluate with fixed-size array (no conversion needed!)
+    // fixed-size array issues are fixed
     pub fn eval<V: Vector>(&self, inputs: &V) -> Result<f64, Box<dyn Error>> {
         match &self.equation {
             Some(eq) => Ok(eq.eval(inputs)?),

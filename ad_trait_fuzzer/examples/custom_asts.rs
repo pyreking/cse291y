@@ -1,10 +1,7 @@
 // examples/build_custom_ast.rs
-//
-// Examples of building various AST expressions manually
-// Run with: cargo run --example build_custom_ast
 
 use fuzz_core::ast_expr::{SimpleExpr, Expr};
-use fuzz_core::ast_evaluator::unified::AllEvaluators;
+use fuzz_core::ast_evaluator::unified::AdPyUnified;
 use fuzz_core::ast_evaluator::{SExprPrinter, InfixPrinter, SSAPrinter};
 use fuzz_core::fuzz_harness::run_custom_test;
 use fuzz_core::gt_calculators::PyTorchGroundTruthCalculator;
@@ -15,7 +12,7 @@ fn print_and_test(name: &str, expr: SimpleExpr, num_inputs: usize, inputs: &[f64
     println!("Infix:    {}", InfixPrinter::print(&expr, num_inputs));
     println!("SSA:\n{}", SSAPrinter::print(&expr));
     
-    let evaluator = AllEvaluators::new(expr, num_inputs, 1);
+    let evaluator = AdPyUnified::new(expr, num_inputs, 1);
     let gt_calculators = [PyTorchGroundTruthCalculator];
     
     println!("Testing with inputs {:?}:", inputs);

@@ -8,7 +8,7 @@ use fuzz_core::input_decoder::{FuzzInputDecoder, TwoInputDecoder, GeneralInputDe
 use fuzz_core::fuzz_harness::{run_ad_tests, HarnessMode, FuzzConfig}; 
 use fuzz_core::oracles::FuzzingOracles; 
 use fuzz_core::gt_calculators::PyTorchGroundTruthCalculator; 
-use fuzz_core::ast_evaluator::unified::AllEvaluators;
+use fuzz_core::ast_evaluator::unified::AdPyUnified;
 use fuzz_core::ast_evaluator::{SExprPrinter, SSAPrinter, InfixPrinter};
 use fuzz_core::ast_generator::{generate_from_bytes, AstGenConfig};
 
@@ -104,6 +104,7 @@ fuzz_target!(|data: &[u8]| {
         Err(_) => return,
     };
     
+    // TODO: make all arbitrary inputs finite and reasonable
     let x: f64 = inputs[0];
     let y: f64 = inputs[1];
     if !x.is_finite() || !y.is_finite() || x <= 0.0 || x.abs() > 1e10 || y.abs() > 100.0 {
@@ -129,7 +130,7 @@ fuzz_target!(|data: &[u8]| {
             Err(_) => continue,
         };
         
-        let evaluator = AllEvaluators::new(generated_expr.expr, generated_expr.num_inputs, 1);
+        let evaluator = AdPyUnified::new(generated_expr.expr, generated_expr.num_inputs, 1);
         used_vars_list.push(generated_expr.num_inputs);
         evaluators.push(evaluator);
     }

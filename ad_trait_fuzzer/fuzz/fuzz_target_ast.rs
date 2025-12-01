@@ -15,7 +15,7 @@ use fuzz_core::ast_generator::{generate_from_bytes, AstGenConfig};
 const NUM_GENERATED_TESTS: usize = 1; 
 
 // Print utility function:
-fn print_vec(vec: &Vec<f64>)
+fn print_vec(vec: &[f64])
 {
     for (i, e) in vec.iter().enumerate()
     {
@@ -123,12 +123,12 @@ fuzz_target!(|data: &[u8]| {
             ast_data
         };
         
-        let expr = match generate_from_bytes(test_data, ast_config.clone()) {
-            Ok(expr) => expr,
+        let generated_expr = match generate_from_bytes(test_data, ast_config.clone()) {
+            Ok(generated_expr) => generated_expr,
             Err(_) => continue,
         };
         
-        let evaluator = AllEvaluators::new(expr, num_variables, 1);
+        let evaluator = AllEvaluators::new(generated_expr.expr, num_variables, 1);
         evaluators.push(evaluator);
     }
     

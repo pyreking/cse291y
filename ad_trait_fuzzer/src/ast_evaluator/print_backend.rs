@@ -46,7 +46,7 @@ impl MainBackend for InfixString {
     fn cos(self) -> Self { InfixString(format!("cos({})", self.0)) }
     fn tan(self) -> Self { InfixString(format!("tan({})", self.0)) }
     fn exp(self) -> Self { InfixString(format!("exp({})", self.0)) }
-    fn log(self) -> Self { InfixString(format!("log({})", self.0)) }
+    fn log(self) -> Self { InfixString(format!("ln({})", self.0)) }
     fn sqrt(self) -> Self { InfixString(format!("sqrt({})", self.0)) }
     fn abs(self) -> Self { InfixString(format!("abs({})", self.0)) }
     

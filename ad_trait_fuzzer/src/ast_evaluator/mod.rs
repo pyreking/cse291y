@@ -10,10 +10,12 @@ pub mod ad_backend;
 pub mod pytorch_backend;
 pub mod unified;
 pub mod print_backend;
+pub mod evalexpr_backend;
 
 pub use ad_backend::AdEvaluator;
 pub use pytorch_backend::PyTorchEvaluator;
 pub use print_backend::{SExprPrinter, SSAPrinter, InfixPrinter};
+pub use evalexpr_backend::EvalexprEvaluator;
 
 /// env for var bindings during eval
 pub type Env<T> = HashMap<String, T>;

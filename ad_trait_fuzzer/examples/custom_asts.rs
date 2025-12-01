@@ -11,8 +11,8 @@ use fuzz_core::gt_calculators::PyTorchGroundTruthCalculator;
 
 fn print_and_test(name: &str, expr: SimpleExpr, num_inputs: usize, inputs: Vec<f64>) {
     println!("\n=== {} ===", name);
-    println!("S-expr: {}", SExprPrinter::print(&expr, num_inputs));
-    println!("Infix:  {}", InfixPrinter::print(&expr, num_inputs));
+    println!("S-expr:   {}", SExprPrinter::print(&expr, num_inputs));
+    println!("Infix:    {}", InfixPrinter::print(&expr, num_inputs));
     println!("SSA:\n{}", SSAPrinter::print(&expr));
     
     let evaluator = AllEvaluators::new(expr, num_inputs, 1);

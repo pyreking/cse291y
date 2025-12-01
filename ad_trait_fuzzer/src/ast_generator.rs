@@ -2,6 +2,7 @@
 
 use crate::ast_expr::{Expr, Op1, Op2};
 use arbitrary::{Arbitrary, Unstructured, Error as ArbitraryError};
+use std::collections::HashSet;
 
 /// Config for AST
 #[derive(Debug, Clone)]
@@ -11,6 +12,13 @@ pub struct AstGenConfig {
     pub allow_division: bool,
     pub allow_power: bool,
     pub allow_log: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct GeneratedExpr {
+    pub expr: Expr<()>,
+    pub used_vars: HashSet<usize>, 
+    pub num_inputs: usize,      // used_vars.len()
 }
 
 impl Default for AstGenConfig {
@@ -56,23 +64,25 @@ pub fn generate_expr_arbitrary(
     u: &mut Unstructured,
     config: &AstGenConfig,
     depth: usize,
+    used_vars: &mut HashSet<usize>,
 ) -> Result<Expr<()>, ArbitraryError> {
     // At max depth, only generate terminals
     if depth >= config.max_depth {
-        return generate_terminal(u, config);
+        return generate_terminal(u, config, used_vars);
     }
 
     // Choose between terminal, unary, or binary
     match u.int_in_range(0..=2)? {
-        0 => generate_terminal(u, config),
-        1 => generate_unary(u, config, depth),
-        _ => generate_binary(u, config, depth),
+        0 => generate_terminal(u, config, used_vars),
+        1 => generate_unary(u, config, depth, used_vars),
+        _ => generate_binary(u, config, depth, used_vars),
     }
 }
 
 fn generate_terminal(
     u: &mut Unstructured,
     config: &AstGenConfig,
+    used_vars: &mut HashSet<usize>,
 ) -> Result<Expr<()>, ArbitraryError> {
     if u.ratio(2, 5)? {
         // Gen a var
@@ -81,6 +91,7 @@ fn generate_terminal(
             return Err(ArbitraryError::NotEnoughData);
         }
         let var_idx = u.int_in_range(0..=config.max_variables.saturating_sub(1))?;
+        used_vars.insert(var_idx);  // Track that we used this variable
         let name = format!("x_{}", var_idx);
         Ok(Expr::Id((), name))
     } else {
@@ -100,8 +111,9 @@ fn generate_unary(
     u: &mut Unstructured,
     config: &AstGenConfig,
     depth: usize,
+    used_vars: &mut HashSet<usize>,
 ) -> Result<Expr<()>, ArbitraryError> {
-    let sub_expr = generate_expr_arbitrary(u, config, depth + 1)?;
+    let sub_expr = generate_expr_arbitrary(u, config, depth + 1, used_vars)?;
     
     let mut op_choice = u.int_in_range(0..=5)?;
     
@@ -127,9 +139,10 @@ fn generate_binary(
     u: &mut Unstructured,
     config: &AstGenConfig,
     depth: usize,
+    used_vars: &mut HashSet<usize>,
 ) -> Result<Expr<()>, ArbitraryError> {
-    let left = generate_expr_arbitrary(u, config, depth + 1)?;
-    let right = generate_expr_arbitrary(u, config, depth + 1)?;
+    let left = generate_expr_arbitrary(u, config, depth + 1, used_vars)?;
+    let right = generate_expr_arbitrary(u, config, depth + 1, used_vars)?;
     
     let mut num_ops = 3; // Add, Sub, Mul
     if config.allow_division {
@@ -154,9 +167,18 @@ fn generate_binary(
 }
 
 /// Generate from fuzzer bytes using arbitrary
-pub fn generate_from_bytes(data: &[u8], config: AstGenConfig) -> Result<Expr<()>, ArbitraryError> {
+pub fn generate_from_bytes(data: &[u8], config: AstGenConfig) -> Result<GeneratedExpr, ArbitraryError> {
     let mut u = Unstructured::new(data);
-    generate_expr_arbitrary(&mut u, &config, 0)
+    let mut used_vars = HashSet::new();
+    let expr = generate_expr_arbitrary(&mut u, &config, 0, &mut used_vars)?;
+    
+    let num_inputs = used_vars.len();
+    
+    Ok(GeneratedExpr {
+        expr,
+        used_vars,
+        num_inputs,
+    })
 }
 
 #[cfg(test)]
@@ -175,7 +197,7 @@ mod tests {
         let data = b"test data for fuzzing expressions";
         
         match generate_from_bytes(data, config) {
-            Ok(expr) => println!("Generated expression: {:?}", expr),
+            Ok(gen) => println!("Generated expression: {:?}, used vars: {:?}", gen.expr, gen.used_vars),
             Err(e) => println!("Generation failed: {:?}", e),
         }
     }
@@ -187,8 +209,8 @@ mod tests {
         // gen multiple expressions to test variety
         for i in 0..5 {
             let data = format!("test data {}", i).into_bytes();
-            if let Ok(expr) = generate_from_bytes(&data, config.clone()) {
-                println!("Expression {}: {:?}", i, expr);
+            if let Ok(gen) = generate_from_bytes(&data, config.clone()) {
+                println!("Expression {}: {:?}, used vars: {:?}", i, gen.expr, gen.used_vars);
             }
         }
     }

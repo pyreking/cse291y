@@ -88,6 +88,7 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
 ) -> Result<(), Box<dyn Error>> {
     // FIX E0034: Disambiguate the num_inputs call by specifying the trait.
     if inputs.len() != PyTorchComputable::num_inputs(&calc) || inputs.len() < 1 {
+        print!("Input length mismatch: expected {}, got {}", PyTorchComputable::num_inputs(&calc), inputs.len());
         println!("Exiting due to input error!!");
         return Ok(());
     }
@@ -118,6 +119,7 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
         forward: forward_jacobian.into_iter().map(|d| (*d).into()).collect::<Vec<f64>>(), 
     };
 
+    println!("Engine Results: {:?}", engine_results);
     // 4. Run all Oracle Checks and return the result
     oracles.check_all(&engine_results, &ground_truths, mode)
 }

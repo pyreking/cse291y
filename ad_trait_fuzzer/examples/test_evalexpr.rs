@@ -39,7 +39,7 @@ fn test_evalexpr_vs_ad_trait<const N: usize>(name: &str, expr: SimpleExpr, input
     println!("\nUsing AD trait:");
     let evaluator = AllEvaluators::new(expr, N, 1);
     let gt_calculators = [PyTorchGroundTruthCalculator];
-    let _ = run_custom_test(inputs.to_vec(), evaluator, &gt_calculators);
+    let _ = run_custom_test(&inputs, evaluator, &gt_calculators);
 }
 
 fn main() {

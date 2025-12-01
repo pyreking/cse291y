@@ -114,6 +114,7 @@ fuzz_target!(|data: &[u8]| {
     
     // Generate AST using arbitrary
     let mut evaluators = Vec::new();
+    let mut used_vars_list = Vec::new();
     
     for i in 0..config.num_generated_tests {
         let offset = i * 32;
@@ -128,7 +129,8 @@ fuzz_target!(|data: &[u8]| {
             Err(_) => continue,
         };
         
-        let evaluator = AllEvaluators::new(generated_expr.expr, num_variables, 1);
+        let evaluator = AllEvaluators::new(generated_expr.expr, generated_expr.num_inputs, 1);
+        used_vars_list.push(generated_expr.num_inputs);
         evaluators.push(evaluator);
     }
     
@@ -142,8 +144,15 @@ fuzz_target!(|data: &[u8]| {
         PyTorchGroundTruthCalculator,
     ];
     
-    for (idx, evaluator) in evaluators.iter().enumerate() {
-        if let Err(e) = run_ad_tests(inputs.clone(), evaluator.clone(), &oracles, &gt_calculators, config.mode) {
+    for (idx, (evaluator, num_inputs)) in evaluators.iter().zip(used_vars_list.iter()).enumerate() {
+        if *num_inputs == 0 {
+            continue;
+        }
+        
+        let num_needed = evaluator.num_inputs();
+        let test_inputs = &inputs[..num_needed];
+        
+        if let Err(e) = run_ad_tests(test_inputs, evaluator.clone(), &oracles, &gt_calculators, config.mode) {
             let expr = evaluator.get_expr();
             let num_vars = evaluator.num_inputs();
             eprintln!("\n=== CRASH DETECTED ===");
@@ -157,7 +166,7 @@ fuzz_target!(|data: &[u8]| {
             eprintln!("\nDebug format:");
             eprintln!("{:#?}", expr);
             eprintln!("\nInputs:");
-            print_vec(&inputs);
+            print_vec(test_inputs);
             eprintln!("Error: {}", e);
             eprintln!("======================\n");
             

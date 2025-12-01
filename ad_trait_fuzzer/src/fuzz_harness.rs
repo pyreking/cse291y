@@ -80,7 +80,7 @@ impl<T: AD, G: Calculator> SimpleADFunction<T, G> {
 // --- ORACLE DRIVER (The Engine) ---
 
 pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthCalculator>(
-    inputs: Vec<f64>,
+    inputs: &[f64],
     calc: G,
     oracles: &FuzzingOracles,
     gt_calculators: &[T],
@@ -114,7 +114,7 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
 
     // 3. Collect Engine Results
     let engine_results = EngineResults {
-        inputs: inputs.clone(),
+        inputs: inputs.to_vec(),
         reverse: reverse_jacobian.into_iter().map(|d| (*d).into()).collect::<Vec<f64>>(), 
         forward: forward_jacobian.into_iter().map(|d| (*d).into()).collect::<Vec<f64>>(), 
     };
@@ -125,14 +125,14 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
 }
 
 pub fn run_custom_test<G: Calculator + PyTorchComputable + 'static, T: GroundTruthCalculator>(
-    inputs: Vec<f64>,
+    inputs: &[f64],
     calc: G,
     gt_calculators: &[T],
 ) -> Result<(), Box<dyn Error>> {
     use crate::oracles::FuzzingOracles;
     
     let oracles = FuzzingOracles::new("all".to_string());
-    let result = run_ad_tests(inputs.clone(), calc, &oracles, gt_calculators, HarnessMode::PanicOnFirstError);
+    let result = run_ad_tests(&inputs, calc, &oracles, gt_calculators, HarnessMode::PanicOnFirstError);
     
     // Print result regardless of pass/fail
     match &result {

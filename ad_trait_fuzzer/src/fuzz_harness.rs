@@ -18,7 +18,7 @@ pub trait Calculator: Clone
 {
     fn eval_expr<T: AD + PartialEq>(&self, _: &[T]) -> T;
     fn num_inputs(&self) -> usize; 
-    fn num_outputs(&self) -> usize { 1 }
+    fn num_outputs(&self) -> usize;
 }
 
 // The methods were likely missing in your local file causing E0407, ensure they are present.
@@ -63,7 +63,6 @@ impl<T: AD, G: Calculator> DifferentiableFunctionTrait<T> for SimpleADFunction<T
     const NAME: &'static str = "SimpleFunc";
     fn call(&self, inputs: &[T], _freeze: bool) -> Vec<T>
     {
-        if inputs.len() < 2 { return vec![T::zero()]; }
         vec![self.expression.eval_expr(inputs.as_slice())]
     }
 
@@ -81,14 +80,15 @@ impl<T: AD, G: Calculator> SimpleADFunction<T, G> {
 // --- ORACLE DRIVER (The Engine) ---
 
 pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthCalculator>(
-    inputs: Vec<f64>,
+    inputs: &[f64],
     calc: G,
     oracles: &FuzzingOracles,
     gt_calculators: &[T],
     mode: HarnessMode, 
 ) -> Result<(), Box<dyn Error>> {
     // FIX E0034: Disambiguate the num_inputs call by specifying the trait.
-    if inputs.len() != PyTorchComputable::num_inputs(&calc) || inputs.len() < 2 {
+    if inputs.len() != PyTorchComputable::num_inputs(&calc) || inputs.len() < 1 {
+        print!("Input length mismatch: expected {}, got {}", PyTorchComputable::num_inputs(&calc), inputs.len());
         println!("Exiting due to input error!!");
         return Ok(());
     }
@@ -114,12 +114,31 @@ pub fn run_ad_tests<G: Calculator + PyTorchComputable + 'static, T: GroundTruthC
 
     // 3. Collect Engine Results
     let engine_results = EngineResults {
-        x: inputs[0],
-        y: inputs[1],
+        inputs: inputs.to_vec(),
         reverse: reverse_jacobian.into_iter().map(|d| (*d).into()).collect::<Vec<f64>>(), 
         forward: forward_jacobian.into_iter().map(|d| (*d).into()).collect::<Vec<f64>>(), 
     };
 
+    println!("Engine Results: {:?}", engine_results);
     // 4. Run all Oracle Checks and return the result
     oracles.check_all(&engine_results, &ground_truths, mode)
+}
+
+pub fn run_custom_test<G: Calculator + PyTorchComputable + 'static, T: GroundTruthCalculator>(
+    inputs: &[f64],
+    calc: G,
+    gt_calculators: &[T],
+) -> Result<(), Box<dyn Error>> {
+    use crate::oracles::FuzzingOracles;
+    
+    let oracles = FuzzingOracles::new("all".to_string());
+    let result = run_ad_tests(&inputs, calc, &oracles, gt_calculators, HarnessMode::PanicOnFirstError);
+    
+    // Print result regardless of pass/fail
+    match &result {
+        Ok(_) => println!("Test PASSED"),
+        Err(e) => println!("Test FAILED: {}", e),
+    }
+    
+    result
 }

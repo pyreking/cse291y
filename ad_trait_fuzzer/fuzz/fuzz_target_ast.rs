@@ -8,13 +8,14 @@ use fuzz_core::input_decoder::{FuzzInputDecoder, TwoInputDecoder, GeneralInputDe
 use fuzz_core::fuzz_harness::{run_ad_tests, HarnessMode, FuzzConfig}; 
 use fuzz_core::oracles::FuzzingOracles; 
 use fuzz_core::gt_calculators::PyTorchGroundTruthCalculator; 
-use fuzz_core::ast_evaluator::unified::AllEvaluators;
+use fuzz_core::ast_evaluator::unified::AdPyUnified;
+use fuzz_core::ast_evaluator::{SExprPrinter, SSAPrinter, InfixPrinter};
 use fuzz_core::ast_generator::{generate_from_bytes, AstGenConfig};
 
 const NUM_GENERATED_TESTS: usize = 1; 
 
 // Print utility function:
-fn print_vec(vec: &Vec<f64>)
+fn print_vec(vec: &[f64])
 {
     for (i, e) in vec.iter().enumerate()
     {
@@ -103,6 +104,7 @@ fuzz_target!(|data: &[u8]| {
         Err(_) => return,
     };
     
+    // TODO: make all arbitrary inputs finite and reasonable
     let x: f64 = inputs[0];
     let y: f64 = inputs[1];
     if !x.is_finite() || !y.is_finite() || x <= 0.0 || x.abs() > 1e10 || y.abs() > 100.0 {
@@ -113,6 +115,7 @@ fuzz_target!(|data: &[u8]| {
     
     // Generate AST using arbitrary
     let mut evaluators = Vec::new();
+    let mut used_vars_list = Vec::new();
     
     for i in 0..config.num_generated_tests {
         let offset = i * 32;
@@ -122,12 +125,13 @@ fuzz_target!(|data: &[u8]| {
             ast_data
         };
         
-        let expr = match generate_from_bytes(test_data, ast_config.clone()) {
-            Ok(expr) => expr,
+        let generated_expr = match generate_from_bytes(test_data, ast_config.clone()) {
+            Ok(generated_expr) => generated_expr,
             Err(_) => continue,
         };
         
-        let evaluator = AllEvaluators::new(expr, num_variables, 1);
+        let evaluator = AdPyUnified::new(generated_expr.expr, generated_expr.num_inputs, 1);
+        used_vars_list.push(generated_expr.num_inputs);
         evaluators.push(evaluator);
     }
     
@@ -141,13 +145,29 @@ fuzz_target!(|data: &[u8]| {
         PyTorchGroundTruthCalculator,
     ];
     
-    for (idx, evaluator) in evaluators.iter().enumerate() {
-        if let Err(e) = run_ad_tests(inputs.clone(), evaluator.clone(), &oracles, &gt_calculators, config.mode) {
+    for (idx, (evaluator, num_inputs)) in evaluators.iter().zip(used_vars_list.iter()).enumerate() {
+        if *num_inputs == 0 {
+            continue;
+        }
+        
+        let num_needed = evaluator.num_inputs();
+        let test_inputs = &inputs[..num_needed];
+        
+        if let Err(e) = run_ad_tests(test_inputs, evaluator.clone(), &oracles, &gt_calculators, config.mode) {
+            let expr = evaluator.get_expr();
+            let num_vars = evaluator.num_inputs();
             eprintln!("\n=== CRASH DETECTED ===");
             eprintln!("Expression that caused the crash:");
-            eprintln!("{:#?}", evaluator.get_expr());
-            eprintln!("Inputs:");
-            print_vec(&inputs);
+            eprintln!("\nInfix notation:");
+            eprintln!("{}", InfixPrinter::print(expr, num_vars));
+            eprintln!("\nS-expression format:");
+            eprintln!("{}", SExprPrinter::print(expr, num_vars));
+            eprintln!("\nSSA format:");
+            eprintln!("{}", SSAPrinter::print(expr));
+            eprintln!("\nDebug format:");
+            eprintln!("{:#?}", expr);
+            eprintln!("\nInputs:");
+            print_vec(test_inputs);
             eprintln!("Error: {}", e);
             eprintln!("======================\n");
             

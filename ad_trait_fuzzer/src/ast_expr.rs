@@ -86,11 +86,10 @@ impl<T> Expr<T> {
     }
 }
 
-/// Simple unit type for tags when we don't need metadata
+/// Simple unit with no meta
 pub type SimpleExpr = Expr<()>;
 
 impl SimpleExpr {
-    /// Helper constructors for common expressions without metadata
     
     pub fn num(val: f64) -> Self {
         Expr::Number((), val)
@@ -142,6 +141,10 @@ impl SimpleExpr {
 
     pub fn log(expr: SimpleExpr) -> Self {
         Expr::UnOp((), Op1::Log, Box::new(expr))
+    }
+
+    pub fn abs(expr: SimpleExpr) -> Self {
+        Expr::UnOp((), Op1::Abs, Box::new(expr))
     }
 }
 

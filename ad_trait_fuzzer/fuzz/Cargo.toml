@@ -29,3 +29,7 @@ path = "fuzz_target_ast_example.rs"
 [[bin]]
 name = "fuzz_target_ast"
 path = "fuzz_target_ast.rs"
+
+[[bin]]
+name = "fuzz_target_evalexpr_jit"
+path = "fuzz_target_evalexpr_jit.rs"

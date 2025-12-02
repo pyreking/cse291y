@@ -1,0 +1,18 @@
+# Rust build artifacts
+target/
+
+# Cargo.lock for libraries (optional - uncomment if needed)
+# Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+/ad_trait_fuzzer/fuzz/corpus/fuzz_target_ast/

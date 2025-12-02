@@ -23,10 +23,10 @@ impl Oracle for ReverseVsForwardCheck {
         let rev_result = engine.reverse[i];
         let fwd_result = engine.forward[i];
         
-        // Skip check if either result is not finite (NaN, Inf)
-        if !rev_result.is_finite() || !fwd_result.is_finite() {
-            return Ok(());
-        }
+        // // Skip check if either result is not finite (NaN, Inf)
+        // if !rev_result.is_finite() || !fwd_result.is_finite() {
+        //     return Ok(());
+        // }
 
         let diff = (rev_result - fwd_result).abs();
 

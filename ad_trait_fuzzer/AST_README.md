@@ -16,7 +16,7 @@ AST based approach for defining and evaluating mathematical expressions that can
    - `MainBackend` trait - interface for numeric operations
    - `ad_backend.rs` - Implements MainBackend for any `T: AD`
    - `pytorch_backend.rs` - Implements MainBackend for PyTorch tensors
-   - `unified.rs` - `AllEvaluators` bundles both backends for the same expression
+   - `AllEvaluators` bundles both backends for the same expression
    - `evaluate()` - Generic traversal function working with any MainBackend
 
 3. **`ast_generator.rs`** - Random AST generation from fuzzer bytes
@@ -38,9 +38,6 @@ cargo +nightly fuzz run fuzz_target_ast
 # Set maximum AST depth (default: 4)
 AST_MAX_DEPTH=5 cargo +nightly fuzz run fuzz_target_ast
 
-# Disable risky operations
-AST_ALLOW_LOG=false cargo +nightly fuzz run fuzz_target_ast
-
 # Select specific oracle checks
 FUZZ_ORACLE=rev_fwd cargo +nightly fuzz run fuzz_target_ast
 # Options: all, rev_fwd, rev_gt, fwd_gt
@@ -60,7 +57,6 @@ let config = AstGenConfig {
     max_variables: 2,
     allow_division: true,
     allow_power: true,
-    allow_log: false,  // Disabled by default - can cause numerical issues
 };
 
 // Generate AST from fuzzer bytes
@@ -75,15 +71,12 @@ run_ad_tests(inputs, evaluator, &oracles, &gt_calculators, mode)?;
 
 ## How It Works
 
-The key insight: **one AST, multiple backends via trait abstraction**.
-
 ```
                          Expr<Tag>
                              |
                     evaluate(&expr, env)
                              |
                     MainBackend trait
-                       /           \
                       /             \
           impl<T: AD> for T    PyTorchTensor
                  |                   |
@@ -93,7 +86,7 @@ The key insight: **one AST, multiple backends via trait abstraction**.
 
 ### The MainBackend Trait
 
-Both AD types and PyTorch tensors implement the same interface:
+AD types and PyTorch tensors implement the same interface:
 
 ```rust
 trait MainBackend {
@@ -109,7 +102,7 @@ trait MainBackend {
 
 ### AllEvaluators
 
-Bundles both backends for the same expression:
+has both backends for the same expression:
 
 ```rust
 struct AllEvaluators<Tag> {
@@ -118,7 +111,6 @@ struct AllEvaluators<Tag> {
 }
 ```
 
-This allows the fuzzer to:
 1. Evaluate with AD types (forward/reverse)
 2. Evaluate with PyTorch (ground truth)
 3. Compare results via oracles
@@ -145,14 +137,9 @@ Error: Oracle check failed (Rev vs PyTorch): ...
 ======================
 ```
 
-The raw bytes are saved to `fuzz/artifacts/fuzz_target_ast/` for reproduction.
+The raw bytes are saved to `fuzz/artifacts/fuzz_target_ast/` for reproduction. if you change fuzz_target_ast, it will only run inputs!!!
 
-## Performance Notes (gpt generated)
-
-The AST evaluation has a small overhead compared to direct computation, but:
-- Still fast enough for fuzzing (microseconds per evaluation)
-- The flexibility and correctness guarantees are worth it
-- Can optimize hot paths if needed (e.g., JIT compilation)
+Evalexprjit also implemented and follows similar workflow
 
 ## Testing
 

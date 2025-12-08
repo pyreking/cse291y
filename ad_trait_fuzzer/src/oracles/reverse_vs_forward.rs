@@ -35,7 +35,7 @@ impl Oracle for ReverseVsForwardCheck {
         let threshold = ABS_TOLERANCE.max(scaled_rel_threshold);
         
         // 2. Perform the Hybrid check: Fail only if difference is greater than the threshold
-        if diff > threshold {
+        if diff > threshold || (rev_result.is_nan() != fwd_result.is_nan()) {
             
             // Calculate relative difference, safely handling division by zero for presentation
             let relative_diff = if fwd_result.abs() > ABS_TOLERANCE {

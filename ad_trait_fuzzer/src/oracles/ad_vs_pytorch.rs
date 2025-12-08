@@ -50,7 +50,7 @@ impl Oracle for ADVsGroundTruthCheck {
         let threshold = ABS_TOLERANCE.max(scaled_rel_threshold);
 
         // 2. Perform the Hybrid check: Fail only if difference is greater than the threshold
-        if diff > threshold {
+        if diff > threshold || (ad_val.is_nan() != gt_val.is_nan()) {
             let relative_diff = diff / gt_val.abs();
             let percent_diff = (relative_diff * 100.0).min(100.0);
             

@@ -40,7 +40,7 @@ impl EvalexprVsPyTorchCheck {
         let scaled_rel_threshold = gt_val.abs() * self.rel_tolerance;
         let threshold = self.abs_tolerance.max(scaled_rel_threshold);
         
-        if diff > threshold {
+        if diff > threshold || (evalexpr_val.is_nan() != gt_val.is_nan()){
             return Err(format!(
                 "evalexpr-jit vs {} derivative mismatch for x_{}: evalexpr-jit = {}, {} = {}, diff = {} (threshold = {})",
                 gt.name, var_index, evalexpr_val, gt.name, gt_val, diff, threshold

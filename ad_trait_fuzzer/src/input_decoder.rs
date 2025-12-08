@@ -2,6 +2,8 @@
 
 use core::convert::TryInto;
 use std::error::Error;
+use rand::Rng;
+use rand::rngs::ThreadRng;
 
 /// Defines the interface for converting raw fuzzer bytes into numerical inputs (f64).
 pub trait FuzzInputDecoder {
@@ -40,7 +42,8 @@ impl FuzzInputDecoder for TwoInputDecoder {
 
 pub struct GeneralInputDecoder
 {
-    pub input_length: usize
+    pub input_length: usize,
+    pub use_rng: bool
 }
 
 impl FuzzInputDecoder for GeneralInputDecoder
@@ -51,6 +54,15 @@ impl FuzzInputDecoder for GeneralInputDecoder
     {
         let mut ret_val: Vec<f64> = vec![];
         ret_val.resize(self.input_length, 0.0);
+        if self.use_rng
+        {
+            let mut rng = ThreadRng::default();
+            for (i, el) in ret_val.iter_mut().enumerate()
+            {
+                *el = rng.gen::<f64>();
+            }
+            return Ok(ret_val);
+        }
         for (i, el) in ret_val.iter_mut().enumerate()
         {
             let bytes: [u8; 8] = data[i..(8 + i)].try_into().map_err(|_| "Failed to slice bytes")?;

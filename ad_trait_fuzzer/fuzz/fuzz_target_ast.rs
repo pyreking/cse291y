@@ -72,6 +72,10 @@ fn get_ast_config() -> AstGenConfig {
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(2);
+    
+    let use_rng = env::var("USE_RNG")
+        .map(|s| s.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);  // Disable by def
 
     AstGenConfig {
         max_depth,
@@ -79,6 +83,7 @@ fn get_ast_config() -> AstGenConfig {
         allow_division,
         allow_power,
         allow_log,
+        use_rng
     }
 }
 
@@ -89,8 +94,9 @@ fuzz_target!(|data: &[u8]| {
     
     let ast_config = get_ast_config();
     let num_variables = ast_config.max_variables;
+    let use_rng = ast_config.use_rng;
 
-    let input_decoder: GeneralInputDecoder = GeneralInputDecoder{ input_length: num_variables };
+    let input_decoder: GeneralInputDecoder = GeneralInputDecoder{ input_length: num_variables, use_rng: use_rng };
 
     let min_data_size = num_variables * 8;
 

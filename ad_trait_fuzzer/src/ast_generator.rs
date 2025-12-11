@@ -3,6 +3,9 @@
 use crate::ast_expr::{Expr, Op1, Op2};
 use arbitrary::{Arbitrary, Unstructured, Error as ArbitraryError};
 use std::collections::HashSet;
+use rand::Rng;
+use rand::rngs::ThreadRng;
+
 
 /// Config for AST
 #[derive(Debug, Clone)]
@@ -12,6 +15,7 @@ pub struct AstGenConfig {
     pub allow_division: bool,
     pub allow_power: bool,
     pub allow_log: bool,
+    pub use_rng: bool
 }
 
 #[derive(Debug, Clone)]
@@ -29,6 +33,7 @@ impl Default for AstGenConfig {
             allow_division: true,
             allow_power: true,
             allow_log: false,
+            use_rng: false
         }
     }
 }
@@ -122,13 +127,16 @@ fn generate_terminal(
         Ok(Expr::Id((), name))
     } else {
         // Gen a number
-        let val = match u.int_in_range(0..=4)? {
+        /*let val = match u.int_in_range(0..=4)? {
             0 => 0.0,
             1 => 1.0,
             2 => 2.0,
             3 => u.arbitrary::<f64>()?.clamp(-10.0, 10.0),
             _ => u.arbitrary::<f64>()?.abs().clamp(0.1, 5.0),
-        };
+        };*/
+        let mut rng = ThreadRng::default();
+        let val = rng.gen::<f64>();
+        println!("Val: {val}");
         Ok(Expr::Number((), val))
     }
 }
